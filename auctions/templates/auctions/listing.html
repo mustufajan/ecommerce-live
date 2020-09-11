@@ -1,0 +1,98 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div style="padding-left: 75px;">
+        <h4 id="listing_heading">{{listing}}</h4>
+        {%if listing.active %}
+            <p style="color: green; font-weight: 700;">Active</p>
+        {% else %}
+            <p style="color: red;  font-weight: 700;">Closed</p>
+        {% endif %}
+    </div>  
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-auto">
+                <img src="{{ listing.image.url }}" width="240" id="listing_pic" alt="image here">
+            </div>
+            <div class="col-md-auto">
+                    <h6 style="display: inline-block;"> Description:&nbsp</h6><p style="display: inline-block;">{{ listing.description }}</p><br>
+                    <h6 style="display: inline-block;">Starting Bid: $</h6><p style="display: inline-block;">{{ listing.price }}</p>&nbsp
+                    
+                    <form action="{% url 'watchlist' listing.id %}" method="POST" style="display: inline-block;">
+                        {%csrf_token%}
+
+                        {% if  watched %}
+                            <input type="submit" id="watchlist" value="Remove from watchlist">  
+                        {% else %}
+                            <input type="submit" id="watchlist" value="Watchlist+">
+                        {% endif %}
+                    </form> 
+
+                    <p style="font-size: small;">{{number_of_bids}} people have bid on this item. Highest bid, ${{ max_bid.value__max }}</p>
+
+                    
+
+    
+
+                        {% if user_bid and max_bid.value__max == user_bid.value  %}
+                            
+                            {% if not listing.active and max_bid.value__max == user_bid.value %}
+                                <h4 style="color: green;">You have won this bidding session!</h4>
+                            {% else %}
+                                You bid ${{ user_bid.value }} on this item!
+                            {% endif %}
+
+                        {% else %}
+                            {% if user_bid %}
+                                <p style="font-size: small; color: crimson;">You are no loger the highest bidder, your last bid was ${{ user_bid.value }}</p> 
+                            {% endif %}
+
+                            {% if request.user != listing.seller and listing.active %}
+                                <form action="{% url 'bid' listing.id %}" method="POST" >
+                                    {%csrf_token%}
+                                    {{bid_form}}
+                                    <input type="submit" id="bid" value="Confirm Bid!">
+                                </form>
+                            {% elif listing.active %}
+                                <form action="{% url 'listing_status' listing.id %}" method="POST" >
+                                    {%csrf_token%}
+                                    <input type="submit" id="bid" value="Deactivate">
+                                </form>
+                            {% elif not listing.active and number_of_bids == 0 %}
+                                <form action="{% url 'listing_status' listing.id %}" method="POST" >
+                                    {%csrf_token%}
+                                    <input type="submit" id="bid" value="Activate">
+                                </form>
+                            {% else %}
+                                <h4 style="color: green;">{{max_bidder.bidder}} has won this bidding session!</h4>
+                            {% endif %}               
+                        {% endif %}
+                     <br><br>
+                    <p style="font-size: smaller;">Posted by {{listing.seller}} on {{listing.creation_date_time}}</p>
+            </div>
+        </div>  
+    </div>
+
+    
+    <br>
+
+    <div style="padding-left: 75px;">
+        <h6 >Comments</h6>
+        {% for comment in comments %}
+        <p style="color: indigo; font-weight: 500; display: inline;">{{comment.commenter}}</p>
+            {{comment}}
+            <br>
+        {%  endfor %}
+        <br>
+        <form action="{% url 'comment' listing.id %}" method="POST">
+            {%csrf_token%}
+
+            <input placeholder="Add a comment.." type="text" name="comment" id="comment">
+            
+        
+        </form>
+    </div>
+
+
+{% endblock %}
