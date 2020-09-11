@@ -1,1 +1,1 @@
-web: gunicorn commerce.wsgi --lof-file--
+web: gunicorn commerce.wsgi --log-file--
